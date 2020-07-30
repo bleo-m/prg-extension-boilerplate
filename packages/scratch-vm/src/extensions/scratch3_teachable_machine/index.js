@@ -528,7 +528,7 @@ class Scratch3VideoSensingBlocks {
                 },	
                 IMAGE_SOURCES: {	
                     acceptReporters: true,	
-                    items: ['camera'] // Randi eventually add costume image or stage here
+                    items: ['camera', 'costume image']
                 }
             }	
         };
@@ -626,26 +626,22 @@ class Scratch3VideoSensingBlocks {
                 format: Video.FORMAT_IMAGE_DATA,
                 dimensions: Scratch3VideoSensingBlocks.DIMENSIONS
             });
-        } else if (image_source == 'stage') {
-            /*const drawable = this.runtime.renderer._allDrawables[util.target.drawableID];
+        } else if (image_source == 'costume image') {
+            const drawable = this.runtime.renderer._allDrawables[util.target.drawableID];
             const drawableSkin = drawable._skin; // can be an SVGskin or bitmap skin
             if (drawableSkin.hasOwnProperty("_svgRenderer")) {
                 frame = drawableSkin._svgRenderer._cachedImage;
             } else {
-                //console.log("Bitmap skin");
-                console.log(util.target.getCurrentCostume());
-                console.log(util.target.getCurrentCostume().md5);
-                //console.log(drawableSkin.getTexture(1));
-                
-                frame = new Image();
-                frame.src = "/static/assests/" + util.target.getCurrentCostume().md5;
-                console.log(frame);
-            }*/
-            console.log(this.runtime.renderer);
-            console.log(this.runtime.renderer.canvas);
-            
-            frame = new Image()
-            frame.src = this.runtime.renderer.canvas.toDataURL();
+                const asset = util.target.getCurrentCostume().asset;
+                if (asset && this.runtime && this.runtime.storage) {
+                    const format = asset.dataFormat;
+                    if (format === this.runtime.storage.DataFormat.PNG ||
+                        format === this.runtime.storage.DataFormat.JPG) {
+                        frame = new Image();
+                        frame.src = asset.encodeDataURI();
+                    }
+                }
+            }
         } else {
             frame = new Image();
             frame.src = image_source;
@@ -698,7 +694,6 @@ getPredictionStateOrStartPredicting(modelUrl) {
         if (frame.data != null) { // have ImageData object
             predictions = await this.getPredictionFromModel(modelUrl, frame);
         } else { // raw base 64 image string?
-            console.log(frame);
             const model = this.predictionState[modelUrl].model;
             predictions = await model.predict(frame);	    
         }
