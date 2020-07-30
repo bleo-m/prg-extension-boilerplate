@@ -47,6 +47,7 @@ class MicrobitRobot {
         this.left_line = 0;
         this.right_line = 0;
         this.last_reading = 0;
+        this.camera_image = 0;
         
     
         this.scratch_vm.on('PROJECT_STOP_ALL', this.resetRobot.bind(this));
@@ -79,7 +80,7 @@ class MicrobitRobot {
                     opcode: 'playMusic',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.playMusic',
+                        id: 'microbitBot.playMusic',
                         default: 'play song [SONG]',
                         description: 'Play song using the piezo'
                     }),
@@ -96,7 +97,7 @@ class MicrobitRobot {
                     opcode: 'setRgbLedColor',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.setLEDColor',
+                        id: 'microbitBot.setLEDColor',
                         default: 'set headlight color [COLOR]',
                         description: 'Set the RGB headlight color'
                     }),
@@ -112,7 +113,7 @@ class MicrobitRobot {
                     opcode: 'rgbLedOff',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.ledOff',
+                        id: 'microbitBot.ledOff',
                         default: 'turn headlights off',
                         description: 'Turn off the LED'
                     }),
@@ -123,7 +124,7 @@ class MicrobitRobot {
                     opcode: 'setLEDDisplay',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.setLEDDisplay',
+                        id: 'microbitBot.setLEDDisplay',
                         default: 'set LED display [ICON]',
                         description: 'Set the LED display to an icon'
                     }),
@@ -139,7 +140,7 @@ class MicrobitRobot {
                     opcode: 'ledDisplayOff',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.ledDisplayOff',
+                        id: 'microbitBot.ledDisplayOff',
                         default: 'turn LED display off',
                         description: 'Turn off the LED display'
                     }),
@@ -150,7 +151,7 @@ class MicrobitRobot {
                     opcode: 'drive',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.driveForwardBackward',
+                        id: 'microbitBot.driveForwardBackward',
                         default: 'drive [DIR] for [NUM] seconds',
                         description: 'Send command to robot to drive forward or backward'
                     }),
@@ -170,7 +171,7 @@ class MicrobitRobot {
                     opcode: 'turn',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
-                        id: 'arduinoBot.turnRightLeft',
+                        id: 'microbitBot.turnRightLeft',
                         default: 'turn [TURN] for [NUM] seconds',
                         description: 'Send command to robot to turn right or left'
                     }),
@@ -190,7 +191,7 @@ class MicrobitRobot {
                 {
                     opcode: 'whenButtonPressed',
                     text: formatMessage({
-                        id: 'arduinoBot.readButtonStatus',
+                        id: 'microbitBot.readButtonStatus',
                         default: 'when [BUTTON] button pressed',
                         description: 'Trigger when buttons on microbit are pressed'
                     }),
@@ -207,7 +208,7 @@ class MicrobitRobot {
                     opcode: 'readLineStatus',
                     blockType: BlockType.BOOLEAN,
                     text: formatMessage({
-                        id: 'arduinoBot.readLineSensorStatus',
+                        id: 'microbitBot.readLineSensorStatus',
                         default: 'line detected on [LINE]',
                         description: 'detect line sensor state'
                     }),
@@ -223,13 +224,21 @@ class MicrobitRobot {
                     opcode: 'readDistance',
                     blockType: BlockType.REPORTER,
                     text: formatMessage({
-                        id: 'arduinoBot.readDistance',
+                        id: 'microbitBot.readDistance',
                         default: 'read distance',
                         description: 'Get distance read from ultrasonic distance sensor'
+                    })
+                },
+                {
+                    opcode: 'getCameraImage',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'microbitBot.getCameraImage',
+                        default: 'robot camera image',
+                        description: 'Get image from camera'
                     }),
-                    arguments: { }
+                    isTerminal: true
                 }
-                // play sounds
                 // add blocks for speech?
             ],
             menus: {
@@ -346,7 +355,7 @@ class MicrobitRobot {
       this._mStatus = 2;
       this.scratch_vm.emit(this.scratch_vm.constructor.PERIPHERAL_CONNECTED);
       var buffer = msg.buffer;
-      var imageCapture = msg.capture;
+      var imageCapture = msg.payload;
       
       if (buffer != undefined && buffer != null) {
         // The beginning of the buffer (from firmata) starts with 224, if this buffer starts with 224 it is the beginning of the message
@@ -360,8 +369,7 @@ class MicrobitRobot {
             this.last_reading = 1;
         }
       } else if (imageCapture != undefined && imageCapture != null) {
-        
-        
+        this.camera_image = "data:image/jpeg;base64," + imageCapture;
       }
       // Detect if the robot gets disconnected
       if (this._mConnectionTimeout != null) clearTimeout(this._mConnectionTimeout);
@@ -493,6 +501,15 @@ class MicrobitRobot {
         distance = -1;
     }
     return distance;
+  }
+  
+  /**
+     * Implement getCameraImage
+     * @returns {string} the base64 uri of the image
+     */
+  getCameraImage () {
+    //console.log(this.scratch_vm.ioDevices.video);
+    return this.camera_image;
   }
   
     /**
